@@ -17,8 +17,8 @@
 
 ```bash
 cp .env.example .env.local   # 개인 시크릿/오버라이드를 넣습니다
-npm install
-npm run dev                   # .env.local → .env.development 순서로 로드
+pnpm install
+pnpm dev                   # .env.local → .env.development 순서로 로드
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 열고 `/demo`에서 React Query + Zustand + DataTable 예제를 확인할 수 있습니다.
@@ -38,30 +38,30 @@ npm run dev                   # .env.local → .env.development 순서로 로드
 
 ```bash
 # 개발
-npm run dev          # dev env 로 next dev
-npm run dev:prod     # prod env 로 next dev (프로덕션 설정 리허설)
-npm run dev:local    # .env.local 만 로드
+pnpm dev          # dev env 로 next dev
+pnpm dev:prod     # prod env 로 next dev (프로덕션 설정 리허설)
+pnpm dev:local    # .env.local 만 로드
 
 # 빌드
-npm run build        # prod env 로 next build (기본 프로덕션 빌드)
-npm run build:dev    # dev env 로 next build (스테이징 번들)
-npm run build:local  # .env.local 만으로 빌드
+pnpm build        # prod env 로 next build (기본 프로덕션 빌드)
+pnpm build:dev    # dev env 로 next build (스테이징 번들)
+pnpm build:local  # .env.local 만으로 빌드
 
 # 서버 (빌드된 파일을 서빙. NEXT_PUBLIC_* 는 빌드 시점에 이미 인라인됨)
-npm run start        # next start — .env.production 자동 로드
+pnpm start        # next start — .env.production 자동 로드
 
 # 품질
-npm run typecheck
-npm run lint
+pnpm typecheck
+pnpm lint
 
 # shadcn 컴포넌트 추가
-npx shadcn@latest add <name>
+pnpm dlx shadcn@latest add <name>
 
 # Drizzle (dev env 기준)
-npm run db:generate  # 마이그레이션 생성
-npm run db:migrate   # 마이그레이션 적용
-npm run db:push      # 스키마 직접 푸시
-npm run db:studio    # Drizzle Studio
+pnpm db:generate  # 마이그레이션 생성
+pnpm db:migrate   # 마이그레이션 적용
+pnpm db:push      # 스키마 직접 푸시
+pnpm db:studio    # Drizzle Studio
 ```
 
 ## 구조

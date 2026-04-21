@@ -192,20 +192,20 @@ try {
 
 | 목적 | 명령 | 로드되는 env 파일 |
 | --- | --- | --- |
-| 개발(기본, dev env) | `npm run dev` | `.env.local` → `.env.development` |
-| 개발(prod env) | `npm run dev:prod` | `.env.local` → `.env.production` |
-| 개발(로컬만) | `npm run dev:local` | `.env.local` |
-| 프로덕션 빌드 | `npm run build` | `.env.local` → `.env.production` |
-| 스테이징 빌드(dev env) | `npm run build:dev` | `.env.local` → `.env.development` |
-| 로컬 빌드 | `npm run build:local` | `.env.local` |
-| 프로덕션 서버 시작 | `npm run start` | Next.js 기본 (`.env.production` + `.env.local`) |
-| 타입 체크 | `npm run typecheck` | — |
-| Lint | `npm run lint` | — |
-| shadcn 컴포넌트 추가 | `npx shadcn@latest add <name>` | — |
-| Drizzle 마이그레이션 생성 | `npm run db:generate` | `.env.local` → `.env.development` |
-| Drizzle 마이그레이션 적용 | `npm run db:migrate` | `.env.local` → `.env.development` |
-| 스키마 직접 푸시 (dev 전용) | `npm run db:push` | `.env.local` → `.env.development` |
-| Drizzle Studio | `npm run db:studio` | `.env.local` → `.env.development` |
+| 개발(기본, dev env) | `pnpm dev` | `.env.local` → `.env.development` |
+| 개발(prod env) | `pnpm dev:prod` | `.env.local` → `.env.production` |
+| 개발(로컬만) | `pnpm dev:local` | `.env.local` |
+| 프로덕션 빌드 | `pnpm build` | `.env.local` → `.env.production` |
+| 스테이징 빌드(dev env) | `pnpm build:dev` | `.env.local` → `.env.development` |
+| 로컬 빌드 | `pnpm build:local` | `.env.local` |
+| 프로덕션 서버 시작 | `pnpm start` | Next.js 기본 (`.env.production` + `.env.local`) |
+| 타입 체크 | `pnpm typecheck` | — |
+| Lint | `pnpm lint` | — |
+| shadcn 컴포넌트 추가 | `pnpm dlx shadcn@latest add <name>` | — |
+| Drizzle 마이그레이션 생성 | `pnpm db:generate` | `.env.local` → `.env.development` |
+| Drizzle 마이그레이션 적용 | `pnpm db:migrate` | `.env.local` → `.env.development` |
+| 스키마 직접 푸시 (dev 전용) | `pnpm db:push` | `.env.local` → `.env.development` |
+| Drizzle Studio | `pnpm db:studio` | `.env.local` → `.env.development` |
 
 > `dotenv -e A -e B` 는 **먼저 나열된 파일이 우선**입니다. 따라서 `.env.local`이 항상 `.env.development` / `.env.production` 보다 우선 적용됩니다.
 >
@@ -235,18 +235,18 @@ try {
 
 **사용 예**:
 
-- 처음 시작: `cp .env.example .env.local` → 비밀값 채움 → `npm run dev`
-- 프로덕션 빌드 로컬 리허설: `npm run dev:prod`
-- 스테이징 배포 번들 생성: `npm run build:dev`
+- 처음 시작: `cp .env.example .env.local` → 비밀값 채움 → `pnpm dev`
+- 프로덕션 빌드 로컬 리허설: `pnpm dev:prod`
+- 스테이징 배포 번들 생성: `pnpm build:dev`
 
 ## 에이전트 작업 순서 (권장)
 
 1. `AGENTS.md`와 해당 route의 `_*` 파일을 먼저 읽어 현재 구조를 파악.
 2. 새 기능의 범위에 맞게 둘 위치 결정 (route-local vs 공용).
-3. DB 변경이 필요하면 `src/db/schema.ts` 수정 → `npm run db:generate` → `npm run db:migrate`.
+3. DB 변경이 필요하면 `src/db/schema.ts` 수정 → `pnpm db:generate` → `pnpm db:migrate`.
 4. 서버 데이터는 Route Handler / Server Action으로 노출 → `http` 클라이언트 + React Query로 소비.
 5. 컴포넌트는 shadcn `ui/*`를 조합해 작성, 150줄 넘기 전에 분리.
-6. 작업 후 `npm run typecheck && npm run lint && npm run build` 통과 확인.
+6. 작업 후 `pnpm typecheck && pnpm lint && pnpm build` 통과 확인.
 7. 사용자가 명시적으로 요청하지 않는 한 새 `.md` 파일(README 외)을 만들지 않는다.
 
 ## 하지 말아야 할 것
