@@ -337,7 +337,7 @@ try {
 - **GitHub Settings → General → Template repository** 체크를 유지해 `Use this template` 버튼이 노출되도록 한다.
 - `main` 브랜치에 빌드 가능한 상태만 머지 — `pnpm typecheck && pnpm lint && pnpm build` 3 명령이 모두 초록이어야 한다.
 - 스택 버전 업그레이드는 별도 PR 로 분리해 사용자가 차이를 따라가기 쉽게 한다.
-- 템플릿 경로(`hinyc/just-init`)를 바꿀 일이 있으면 `README.md` 의 degit 예시와 Use-this-template 링크를 같이 갱신한다.
+- `README.md` 의 degit 명령은 `<owner>/just-init` 플레이스홀더를 유지한다. 특정 개인 계정을 박아두지 않는다 (템플릿 재사용 시 혼란을 주지 않기 위함).
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

@@ -20,7 +20,7 @@
 ### 방법 1 — degit (권장, git 이력 없이 스냅샷만)
 
 ```bash
-pnpm dlx degit hinyc/just-init my-app
+pnpm dlx degit <owner>/just-init my-app   # <owner> 자리에 실제 저장소 주인(사용자/조직)을 넣습니다
 cd my-app
 cp .env.example .env.local
 pnpm install
@@ -29,7 +29,7 @@ pnpm dev
 
 ### 방법 2 — GitHub "Use this template" 버튼
 
-1. [`github.com/hinyc/just-init`](https://github.com/hinyc/just-init) 에서 **Use this template → Create a new repository** 클릭
+1. 이 저장소 페이지에서 **Use this template → Create a new repository** 클릭
 2. 새 레포를 clone 후:
 
 ```bash
