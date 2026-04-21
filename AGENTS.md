@@ -48,6 +48,7 @@ src/
         use-demo-users.ts      # http.get('/demo/users') — BFF 경유
       _columns.tsx             # 테이블 컬럼 정의
       _store.ts                # ★ route 전용 zustand 스토어
+      _types.ts                # (선택) 같은 route의 2+ 파일이 공유하는 타입
   components/
     ui/                        # shadcn 기본 컴포넌트(전역 재사용)
     providers.tsx              # QueryClientProvider 등 글로벌 Provider
@@ -207,17 +208,11 @@ src/app/api/<resource>/
 - 프론트는 `http.get/post/...` 로 **BFF 상대경로**(`/demo/users`) 만 호출한다. base URL 은 `NEXT_PUBLIC_API_BASE_URL` 가 담당.
 - `useQuery` / `useMutation` 의 `queryKey` 는 `[resource, ...params]` 형식.
 - 훅은 `schema.ts` 에서 type-only import 하여 응답 타입을 공유.
-
-### 해서는 안 되는 것
-
-- 컴포넌트/훅에서 외부 API 도메인을 직접 fetch 하지 않기.
-- `app/api/*` 외부(예: Server Component)에서 외부 API 를 직접 호출해도 되지만, 재사용 가능한 로직이면 서비스 레이어로 옮긴다.
-- 라우트 핸들러에서 DB 쿼리·외부 API 호출 코드를 인라인 작성하지 않기 — 반드시 `_service.ts` 로 분리.
-- 클라이언트 훅 파일에서 `_service.ts` 를 import 하지 않기 (server-only).
+- 클라이언트 훅 파일에서 `_service.ts` 를 import 하지 않는다 (server-only).
 
 ## HTTP 클라이언트 규칙
 
-브라우저 측의 모든 HTTP 호출은 `src/lib/http`의 `http` 인스턴스를 통한다. `fetch`를 직접 쓰지 않는다. 대상은 **BFF(`/api/*`)** 이다.
+`src/lib/http` 의 `http` 인스턴스를 사용한다. `fetch` 를 직접 쓰지 않는다.
 
 ```ts
 import { http } from '@/lib/http/instance'
@@ -236,7 +231,7 @@ try {
 }
 ```
 
-- `http.useRequest / useResponse / useError`로 전역 인터셉터 등록 — 인증 토큰 주입, 401 리다이렉트 등은 `src/lib/http/index.ts`에서 설정.
+- `http.useRequest / useResponse / useError` 로 전역 인터셉터 등록. **인터셉터 초기화·기본 인스턴스 설정은 `src/lib/http/instance.ts`** 에서 한다 (배럴 금지 — `index.ts` 는 만들지 않는다).
 - 외부 API 를 서버에서 직접 호출할 때는 `import { HttpClient } from '@/lib/http/client'` 로 가져와 `new HttpClient({ baseUrl: 'https://api.example.com', defaultHeaders: { ... } })` 로 별도 인스턴스를 만들어 `_service.ts` 안에서만 사용.
 - React Query와 조합: `queryFn: () => http.get<T>('/...')`.
 - FormData/Blob/string은 자동 감지해 그대로 전송. 그 외 객체는 JSON 직렬화.
@@ -300,29 +295,22 @@ try {
 
 ## 에이전트 작업 순서 (권장)
 
-1. `AGENTS.md`와 해당 route의 `_*` 파일을 먼저 읽어 현재 구조를 파악.
-2. 새 기능의 범위에 맞게 둘 위치 결정 (route-local vs 공용).
-3. DB 변경이 필요하면 `src/db/schema.ts` 수정 → `pnpm db:generate` → `pnpm db:migrate`.
-4. 서버 데이터는 Route Handler / Server Action으로 노출 → `http` 클라이언트 + React Query로 소비.
-5. 컴포넌트는 shadcn `ui/*`를 조합해 작성, 150줄 넘기 전에 분리.
-6. 작업 후 `pnpm typecheck && pnpm lint && pnpm build` 통과 확인.
-7. 사용자가 명시적으로 요청하지 않는 한 새 `.md` 파일(README 외)을 만들지 않는다.
+1. 해당 route 의 `_*` 파일을 먼저 읽어 구조를 파악하고, 둘 위치를 정한다 (route-local vs 공용 — 2회 룰).
+2. DB 변경은 `src/db/schema.ts` → `pnpm db:generate` → `pnpm db:migrate`.
+3. 서버 데이터는 **BFF 라우트 핸들러**(`src/app/api/*`)로 노출 → 브라우저는 `http` + React Query, 서버 컴포넌트는 `_service.ts` 직접 import.
+4. 작업 후 `pnpm typecheck && pnpm lint && pnpm build` 통과 확인.
 
 ## 하지 말아야 할 것
 
+(아래 내용은 위 섹션에서 이미 다룬 규칙과 중복되지 않는 금지 항목만 모았다.)
+
 - `.env`, 비밀키, 실제 DB URL 커밋 금지.
 - shadcn `ui/*` 파일을 직접 고치지 말고 래퍼 컴포넌트를 새로 만든다.
-- Tailwind `tailwind.config.*`를 되살리지 않기 (v4는 CSS-first).
+- Tailwind `tailwind.config.*` 를 되살리지 않기 (v4는 CSS-first).
 - `any`, 무분별한 `// eslint-disable`, `try/catch` 삼키기 지양.
-- `fetch`를 컴포넌트/훅에서 직접 호출하지 않기 — 항상 `http` 사용.
-- 브라우저에서 외부 API 를 직접 호출하지 않기 — 반드시 `/api/*` BFF 를 경유.
-- 라우트 핸들러(`route.ts`)에 비즈니스 로직·DB 쿼리·외부 API 호출을 인라인 작성하지 않기 — `_service.ts` 로 분리.
-- 서버 컴포넌트/서버 액션이 자기 `/api/*` 를 HTTP 로 재호출하지 않기. 같은 프로세스이므로 `_service.ts` 의 함수를 직접 import 해서 사용한다.
-- 배럴 `index.ts` 를 만들지 않기. 소비자는 `@/lib/http/instance` 처럼 구체 파일 경로로 import.
-- `src/types/index.ts` god-file 만들지 않기. 도메인별 파일로 쪼갠다.
-- 손자 컴포넌트까지 props로 데이터 내리지 않기 — 스토어로 승격.
-- route 전용 스토어를 `src/stores`에 두지 않기 — `_store.ts`로 옮긴다.
-- 서버 전용 코드를 클라이언트 번들로 끌어들이지 않기 (`server-only` 유지).
+- `fetch` 를 컴포넌트/훅에서 직접 호출하지 않기 — 항상 `http` 사용.
+- 서버 전용 코드를 클라이언트 번들로 끌어들이지 않기 (`import 'server-only'` 유지).
+- 사용자가 명시적으로 요청하지 않는 한 새 `.md` 파일(README 외)을 만들지 않는다.
 
 ## 새 종속성 추가 규칙
 
