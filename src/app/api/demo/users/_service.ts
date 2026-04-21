@@ -9,7 +9,7 @@ import type { DemoUser } from './schema'
  *        const rows = await db.select().from(schema.users)
  *        return rows.map(toDemoUser)
  *   2) 외부 API 호출
- *        import { http } from '@/lib/http'
+ *        import { http } from '@/lib/http/instance'
  *        const external = await http.get<ExternalUser[]>('https://api.example.com/users')
  *        return external.map(toDemoUser)
  *

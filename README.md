@@ -20,7 +20,7 @@
 ### 방법 1 — degit (권장, git 이력 없이 스냅샷만)
 
 ```bash
-pnpm dlx degit <owner>/just-init my-app
+pnpm dlx degit hinyc/just-init my-app
 cd my-app
 cp .env.example .env.local
 pnpm install
@@ -29,7 +29,7 @@ pnpm dev
 
 ### 방법 2 — GitHub "Use this template" 버튼
 
-1. 저장소 페이지에서 **Use this template → Create a new repository** 클릭
+1. [`github.com/hinyc/just-init`](https://github.com/hinyc/just-init) 에서 **Use this template → Create a new repository** 클릭
 2. 새 레포를 clone 후:
 
 ```bash
@@ -39,8 +39,6 @@ pnpm dev
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000) 을 열고 `/demo` 에서 React Query + Zustand + DataTable 예제를 확인할 수 있습니다.
-
-> 템플릿으로 사용하려면 GitHub 저장소 Settings → General → 상단의 **"Template repository"** 체크박스를 활성화하세요.
 
 ## 환경변수 파일
 

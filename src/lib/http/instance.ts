@@ -1,20 +1,8 @@
 import { HttpClient } from './client'
 import { HttpError } from './errors'
 
-export { HttpClient } from './client'
-export { HttpError, NetworkError, TimeoutError } from './errors'
-export type {
-  QueryParams,
-  RequestConfig,
-  HttpRequest,
-  RequestInterceptor,
-  ResponseInterceptor,
-  ErrorInterceptor,
-  HttpClientOptions,
-} from './client'
-
 export const http = new HttpClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api',
   defaultHeaders: { Accept: 'application/json' },
   timeout: 15_000,
 })

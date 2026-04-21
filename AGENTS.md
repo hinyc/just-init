@@ -54,10 +54,10 @@ src/
   stores/                      # ★ 전역(global) zustand 스토어만
     ui-store.ts
   lib/
-    http/                      # fetch 기반 HTTP 클라이언트
-      client.ts
-      errors.ts
-      index.ts                 # 기본 인스턴스 `http` export
+    http/                      # fetch 기반 HTTP 클라이언트 (배럴 없음)
+      client.ts                # HttpClient 클래스
+      errors.ts                # HttpError / NetworkError / TimeoutError
+      instance.ts              # 기본 http 인스턴스 + 인터셉터 초기화
     utils.ts
   db/
     index.ts
@@ -79,6 +79,61 @@ drizzle.config.ts
 4. 서버 컴포넌트가 기본. 상호작용·브라우저 API가 필요할 때만 파일 최상단에 `'use client'`.
 5. 컴포넌트 파일은 기본 export가 아닌 **named export**를 선호 (page.tsx 등 Next 컨벤션 파일 제외).
 6. 주석은 "왜"가 비자명할 때만. "무엇"은 이름으로 드러낸다.
+
+## 타입 관리 규칙
+
+타입은 **사용처 옆 → 도메인 파일 → 공용** 순서로 둔다. 중복을 없애면서도 한 파일이 비대해지지 않도록 한다.
+
+### 어디에 두는가
+
+1. **기본은 코로케이션**: 컴포넌트 props·내부 타입은 해당 파일 안에서 바로 정의.
+2. **도메인 계약(contract)은 전용 파일**:
+   - BFF 요청/응답 → `src/app/api/<r>/schema.ts` (zod + `z.infer<>`)
+   - DB row/enum → `src/db/schema.ts` (drizzle `$inferSelect` / `$inferInsert`)
+   - 같은 route 안에서 2+ 파일이 공유 → 해당 route의 `_types.ts`
+   - 여러 route 에서 공유 → `src/types/<domain>.ts` (도메인별 파일)
+3. **2회 룰**: 같은 타입이 **실제로 2 곳 이상**에서 쓰일 때만 상위로 승격한다. 한 번만 쓰이면 사용처 옆 유지.
+4. **`src/types/index.ts` 같은 god-file 금지**. 도메인별로 `user.ts`, `order.ts` 처럼 분할.
+
+### 어떻게 정의하는가
+
+1. **가능하면 zod 스키마에서 파생**: `export type X = z.infer<typeof XSchema>`. 런타임 검증 + 컴파일 타입을 한 소스에서 얻어 drift 방지.
+2. **DB 타입은 drizzle 추론 사용**: `typeof users.$inferSelect` / `$inferInsert`.
+3. **Type-only import 강제**: 다른 파일의 타입만 가져올 때는 `import type { X } from ...`. 특히 서버 전용 파일(`_service.ts`)의 타입을 클라이언트 훅에서 참조할 때.
+4. **공용 타입 파일에는 타입·zod 스키마만**. 실행 로직·인스턴스·부작용 금지 (순환 import 방지).
+5. **enum 은 zod `z.enum([...])` 기반으로** 통일 — TS enum 키워드는 쓰지 않는다(번들 크기·호환성).
+
+### 중복을 발견하면
+
+- 실제로 같은 개념 → 2회 룰에 따라 상위로 승격.
+- 이름만 같고 다른 도메인 → 유지. 경계를 흐리는 강제 통합은 하지 않는다.
+- 새 타입 만들기 전에 `schema.ts` / `src/db/schema.ts` / `src/types/` 를 먼저 grep.
+
+## 배럴 파일 금지
+
+**`index.ts` 로 하위 파일들을 re-export 하는 배럴 패턴을 만들지 않는다.**
+
+- 이유: 트리 셰이킹 방해, 콜드 빌드 지연, 순환 import 위험, 실제 의존 관계가 숨는다.
+- 규칙:
+  - 폴더 단위 `index.ts` re-export 파일을 새로 만들지 않는다.
+  - 소비자는 **구체 파일 경로** 로 import 한다.
+  - 초기화·인스턴스 생성이 필요한 경우(`http` 처럼)에는 용도를 드러내는 파일명을 쓴다(예: `instance.ts`). re-export 용 `index.ts` 가 아니다.
+- 예시
+
+```ts
+// ❌ 배럴 (금지)
+// src/lib/http/index.ts
+export * from './client'
+export * from './errors'
+// 사용처: import { http, HttpClient, HttpError } from '@/lib/http'
+
+// ✅ 명시적 경로
+import { http } from '@/lib/http/instance'
+import { HttpClient } from '@/lib/http/client'
+import { HttpError } from '@/lib/http/errors'
+```
+
+- shadcn `ui/*` 컴포넌트, store, 훅 모두 동일하게 **파일 단위로 직접 import**.
 
 ## Props drilling 금지 (중요)
 
@@ -165,7 +220,8 @@ src/app/api/<resource>/
 브라우저 측의 모든 HTTP 호출은 `src/lib/http`의 `http` 인스턴스를 통한다. `fetch`를 직접 쓰지 않는다. 대상은 **BFF(`/api/*`)** 이다.
 
 ```ts
-import { http, HttpError } from '@/lib/http'
+import { http } from '@/lib/http/instance'
+import { HttpError } from '@/lib/http/errors'
 
 // 기본 사용 — baseUrl 은 NEXT_PUBLIC_API_BASE_URL (기본 '/api')
 const users = await http.get<User[]>('/users')           // → /api/users
@@ -181,7 +237,7 @@ try {
 ```
 
 - `http.useRequest / useResponse / useError`로 전역 인터셉터 등록 — 인증 토큰 주입, 401 리다이렉트 등은 `src/lib/http/index.ts`에서 설정.
-- 외부 API 를 서버에서 직접 호출할 때는 `new HttpClient({ baseUrl: 'https://api.example.com', defaultHeaders: { ... } })` 로 별도 인스턴스를 만들어 `_service.ts` 안에서만 사용.
+- 외부 API 를 서버에서 직접 호출할 때는 `import { HttpClient } from '@/lib/http/client'` 로 가져와 `new HttpClient({ baseUrl: 'https://api.example.com', defaultHeaders: { ... } })` 로 별도 인스턴스를 만들어 `_service.ts` 안에서만 사용.
 - React Query와 조합: `queryFn: () => http.get<T>('/...')`.
 - FormData/Blob/string은 자동 감지해 그대로 전송. 그 외 객체는 JSON 직렬화.
 - `timeout` 옵션으로 `TimeoutError`를 명시적으로 던질 수 있다.
@@ -262,6 +318,8 @@ try {
 - 브라우저에서 외부 API 를 직접 호출하지 않기 — 반드시 `/api/*` BFF 를 경유.
 - 라우트 핸들러(`route.ts`)에 비즈니스 로직·DB 쿼리·외부 API 호출을 인라인 작성하지 않기 — `_service.ts` 로 분리.
 - 서버 컴포넌트/서버 액션이 자기 `/api/*` 를 HTTP 로 재호출하지 않기. 같은 프로세스이므로 `_service.ts` 의 함수를 직접 import 해서 사용한다.
+- 배럴 `index.ts` 를 만들지 않기. 소비자는 `@/lib/http/instance` 처럼 구체 파일 경로로 import.
+- `src/types/index.ts` god-file 만들지 않기. 도메인별 파일로 쪼갠다.
 - 손자 컴포넌트까지 props로 데이터 내리지 않기 — 스토어로 승격.
 - route 전용 스토어를 `src/stores`에 두지 않기 — `_store.ts`로 옮긴다.
 - 서버 전용 코드를 클라이언트 번들로 끌어들이지 않기 (`server-only` 유지).
@@ -279,7 +337,7 @@ try {
 - **GitHub Settings → General → Template repository** 체크를 유지해 `Use this template` 버튼이 노출되도록 한다.
 - `main` 브랜치에 빌드 가능한 상태만 머지 — `pnpm typecheck && pnpm lint && pnpm build` 3 명령이 모두 초록이어야 한다.
 - 스택 버전 업그레이드는 별도 PR 로 분리해 사용자가 차이를 따라가기 쉽게 한다.
-- `README.md` 의 degit 명령에 들어간 `<owner>` 자리는 실제 저장소 주인으로 치환해 안내하는 것을 잊지 않는다. (예: `pnpm dlx degit hinyc/just-init my-app`)
+- 템플릿 경로(`hinyc/just-init`)를 바꿀 일이 있으면 `README.md` 의 degit 예시와 Use-this-template 링크를 같이 갱신한다.
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
