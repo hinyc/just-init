@@ -206,6 +206,9 @@ try {
 | Drizzle 마이그레이션 적용 | `pnpm db:migrate` | `.env.local` → `.env.development` |
 | 스키마 직접 푸시 (dev 전용) | `pnpm db:push` | `.env.local` → `.env.development` |
 | Drizzle Studio | `pnpm db:studio` | `.env.local` → `.env.development` |
+| 의존성 outdated 확인 | `pnpm deps:check` | — |
+| 의존성 업데이트 (semver 내) | `pnpm deps:update` | — |
+| 의존성 업데이트 (메이저 포함) | `pnpm deps:update:latest` | — |
 
 > `dotenv -e A -e B` 는 **먼저 나열된 파일이 우선**입니다. 따라서 `.env.local`이 항상 `.env.development` / `.env.production` 보다 우선 적용됩니다.
 >
@@ -267,6 +270,16 @@ try {
 
 - 이미 있는 도구(zod, React Query, zustand, drizzle, http client)로 해결 가능한지 먼저 확인.
 - 추가 시 본 문서의 "기술 스택" 표도 함께 갱신.
+- 패키지 업데이트는 `pnpm deps:check` → `pnpm deps:update` 로 점진 적용. 메이저 버전업(`deps:update:latest`) 후에는 반드시 `pnpm typecheck && pnpm build` 로 깨진 곳을 확인한다.
+
+## 템플릿 유지보수 (just-init 관리자용)
+
+이 저장소 자체가 템플릿입니다. 새 프로젝트의 출발점이 되므로 다음을 지킵니다.
+
+- **GitHub Settings → General → Template repository** 체크를 유지해 `Use this template` 버튼이 노출되도록 한다.
+- `main` 브랜치에 빌드 가능한 상태만 머지 — `pnpm typecheck && pnpm lint && pnpm build` 3 명령이 모두 초록이어야 한다.
+- 스택 버전 업그레이드는 별도 PR 로 분리해 사용자가 차이를 따라가기 쉽게 한다.
+- `README.md` 의 degit 명령에 들어간 `<owner>` 자리는 실제 저장소 주인으로 치환해 안내하는 것을 잊지 않는다. (예: `pnpm dlx degit hinyc/just-init my-app`)
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

@@ -20,7 +20,10 @@
     "db:generate": "dotenv -e .env.local -e .env.development -- drizzle-kit generate",
     "db:migrate": "dotenv -e .env.local -e .env.development -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -e .env.development -- drizzle-kit push",
-    "db:studio": "dotenv -e .env.local -e .env.development -- drizzle-kit studio"
+    "db:studio": "dotenv -e .env.local -e .env.development -- drizzle-kit studio",
+    "deps:check": "pnpm outdated",
+    "deps:update": "pnpm update",
+    "deps:update:latest": "pnpm update --latest"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.99.2",

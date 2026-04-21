@@ -13,15 +13,34 @@
 - **zod** + **dotenv**로 환경변수 검증 (`src/env.ts`)
 - **AGENTS.md** — 에이전트/사람 공용 프로젝트 가이드
 
-## 시작하기
+## 새 프로젝트 시작하기 (템플릿으로 사용)
+
+이 저장소는 **GitHub Template repository** 로 사용하도록 만들어졌습니다. 두 가지 방법 중 편한 쪽을 고르세요.
+
+### 방법 1 — degit (권장, git 이력 없이 스냅샷만)
 
 ```bash
-cp .env.example .env.local   # 개인 시크릿/오버라이드를 넣습니다
+pnpm dlx degit <owner>/just-init my-app
+cd my-app
+cp .env.example .env.local
 pnpm install
-pnpm dev                   # .env.local → .env.development 순서로 로드
+pnpm dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열고 `/demo`에서 React Query + Zustand + DataTable 예제를 확인할 수 있습니다.
+### 방법 2 — GitHub "Use this template" 버튼
+
+1. 저장소 페이지에서 **Use this template → Create a new repository** 클릭
+2. 새 레포를 clone 후:
+
+```bash
+cp .env.example .env.local
+pnpm install
+pnpm dev
+```
+
+브라우저에서 [http://localhost:3000](http://localhost:3000) 을 열고 `/demo` 에서 React Query + Zustand + DataTable 예제를 확인할 수 있습니다.
+
+> 템플릿으로 사용하려면 GitHub 저장소 Settings → General → 상단의 **"Template repository"** 체크박스를 활성화하세요.
 
 ## 환경변수 파일
 
@@ -62,6 +81,11 @@ pnpm db:generate  # 마이그레이션 생성
 pnpm db:migrate   # 마이그레이션 적용
 pnpm db:push      # 스키마 직접 푸시
 pnpm db:studio    # Drizzle Studio
+
+# 의존성 업데이트
+pnpm deps:check           # 구버전 패키지 목록 (pnpm outdated)
+pnpm deps:update          # semver 범위 내에서 업데이트 (pnpm update)
+pnpm deps:update:latest   # 메이저 포함 최신으로 (pnpm update --latest) · 주의
 ```
 
 ## 구조
